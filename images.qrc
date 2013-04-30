@@ -2,5 +2,7 @@
  <qresource>
 	<file alias="snow.png">images/snow_444x60.png</file>
 	<file alias="wind.png">images/wind_280x90.png</file>
+	<file alias="target.png">images/arrow_blue_16x16.png</file>
  </qresource>
 </RCC>
+

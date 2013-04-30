@@ -33,6 +33,7 @@
 #define NAHEADERVIEW_H
 
 #define GROUP_AREA_MARGIN 10
+#define GROUP_AREA_SPACING 5
 
 #include <QAbstractItemView>
 #include "Section.h"
@@ -78,8 +79,10 @@ class NaHeaderView : public QAbstractItemView
 		QBrush snow_png;
 		QPixmap wind_png;
 
+		int gVisualIndexAt( int pos ) const;
 		int cVisualIndexAt( int pos ) const;
 
+		int gSectionViewportPosition( int visual ) const;
 		int cSectionViewportPosition( int visual ) const;
 
 		int sectionHandleAt( int pos ) const;
@@ -90,12 +93,17 @@ class NaHeaderView : public QAbstractItemView
 			m_target,
 			m_pressed,
 			m_originalSize,
-			m_firstPos,
-			m_lastPos,
 			m_resizedSectionViewportPosition;	// avoid cSectionViewportPosition multiple calls
+
+		QPoint m_firstPos,
+			   m_lastPos;
 
 
 		void setupSectionIndicator( int logical, const QPoint & pos );
+
+		void updateSectionIndicator( int logical, const QPoint & pos );
+
+		void updateTargetMarker( const QPoint & pos );
 
 		QLabel * sectionIndicator,
 			   * targetMarker;
@@ -103,6 +111,14 @@ class NaHeaderView : public QAbstractItemView
 		QPoint sectionIndicatorOffset;
 
 		void resizeSection( int visual, int size );
+
+		bool targetIsGroupArea;
+
+		bool overGroupArea( const QPoint & pos ) const;
+
+		void moveSection();
+
+		bool sectionInGroups( int logical ) const;
 
 	protected:
 		// ниже, 9 обязательных функции требующих реализации
@@ -136,6 +152,9 @@ class NaHeaderView : public QAbstractItemView
 
 	public Q_SLOTS:
 		void headerDataChanged( Qt::Orientation, int logicalFirst, int logicalLast );
+
+	Q_SIGNALS:
+		void groupsChanged( int old_count, int new_count );
 };
 
 #endif

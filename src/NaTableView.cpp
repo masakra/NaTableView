@@ -92,15 +92,16 @@ NaTableView::visualRegionForSelection( const QItemSelection & selection ) const
 void
 NaTableView::createHeader()
 {
-	m_header = new NaHeaderView( this );
+	header = new NaHeaderView( this );
 
+	connect( header, SIGNAL( groupsChanged( int, int ) ), SLOT( groupsChanged( int, int ) ) );
 	// TODO добавить сигналы
 }
 
 void
 NaTableView::setModel( QAbstractItemModel * model )
 {
-	m_header->setModel( model );
+	header->setModel( model );
 
 	QAbstractItemView::setModel( model );
 }
@@ -108,7 +109,7 @@ NaTableView::setModel( QAbstractItemModel * model )
 void
 NaTableView::updateGeometries()
 {
-	const int top = m_header->heightHint();
+	const int top = header->heightHint();
 
 	setViewportMargins( 0, top, 0, 0 );
 
@@ -116,6 +117,14 @@ NaTableView::updateGeometries()
 
 	const QRect vg = viewport()->geometry();
 
-	m_header->setGeometry( vg.left(), vg.top() - top, vg.width(), top );
+	header->setGeometry( vg.left(), vg.top() - top, vg.width(), top );
 }
 
+void
+NaTableView::groupsChanged( int old_count, int new_count )	// slot
+{
+	if ( ! old_count || ! new_count )
+		updateGeometries();
+
+	viewport()->update();
+}

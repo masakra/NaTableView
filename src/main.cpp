@@ -17,6 +17,7 @@ main( int argc, char ** argv )
 
 
 	NaTableView ntv;
+	ntv.resize( 1024, 550 );
 	QSqlQueryModel model;
 
 	model.setQuery( "SELECT * FROM test" );

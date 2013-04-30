@@ -60,9 +60,8 @@ Section::draw( QPainter & painter, int x, int y, int width, int height, const QS
 
 	painter.setPen( pen );
 
-	QLinearGradient bgGradient( 0, 1, 0, rect.bottom() - 1 );
+	QLinearGradient bgGradient( 0, rect.top(), 0, rect.bottom() - 1 );
 	bgGradient.setColorAt( 0, COLOR_GRAD_BEGIN );
-	//bgGradient.setColorAt( 1, QColor( 29, 82, 165 ) );
 	bgGradient.setColorAt( 1, COLOR_GRAD_END );
 
 	//QBrush bg( bgGradient );

@@ -43,7 +43,10 @@ class NaTableView : public QAbstractItemView
 	private:
 		void createHeader();
 
-		NaHeaderView * m_header;
+		NaHeaderView * header;
+
+	private Q_SLOTS:
+		void groupsChanged( int old_count, int new_count );
 
 	protected:
 		// ниже, 9 обязательных функции требующих реализации

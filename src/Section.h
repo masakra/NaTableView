@@ -35,8 +35,8 @@
 #define DEFAULT_SECTION_SIZE 128
 #define MIN_SECTION_SIZE 20
 
-#define COLOR_BORDER QColor( 87, 128, 189 )
-#define COLOR_GRAD_BEGIN QColor( 130, 189, 229 )
+#define COLOR_BORDER QColor( 115, 147, 195 )
+#define COLOR_GRAD_BEGIN QColor( 72, 113, 174 )
 #define COLOR_GRAD_END QColor( 5, 5, 27 )
 
 #define HANDLE_WIDTH 4
