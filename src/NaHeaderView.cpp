@@ -264,7 +264,7 @@ NaHeaderView::paintEvent( QPaintEvent * e )
 
 		Section::draw( painter, pos, GROUP_AREA_MARGIN, DEFAULT_SECTION_SIZE, heightColumns(),
 				modelData( groups[ i ].logical, Qt::DisplayRole ).toString(),
-				Section::WithoutHandle );
+				Section::DrawRibbon, groups[ i ].color() );
 	}
 
 	/*
@@ -283,7 +283,7 @@ NaHeaderView::paintEvent( QPaintEvent * e )
 		const int pos = columns.pos( i );
 
 		columns[ i ].draw( painter, pos, heightGroups(), heightColumns(),
-				modelData( columns[ i ].logical, Qt::DisplayRole ).toString() );
+				modelData( columns[ i ].logical, Qt::DisplayRole ).toString(), Section::DrawHandle );
 	}
 }
 
@@ -524,7 +524,7 @@ NaHeaderView::setupSectionIndicator( int logical, const QPoint & pos )
 	painter.setOpacity( .60 );
 
 	Section::draw( painter, 0, 0, w, h, modelData( logical, Qt::DisplayRole ).toString(),
-			Section::WithoutHandle );
+			Section::DrawNothing );
 
 
 	sectionIndicator->setPixmap( pixmap );

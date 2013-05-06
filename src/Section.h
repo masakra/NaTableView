@@ -41,12 +41,17 @@
 
 #define HANDLE_WIDTH 4
 
+#include <QColor>
+
 //#include
 class QPainter;
 class QString;
 
 class Section
 {
+	private:
+		mutable QColor m_color_cached;
+
 	public:
 		Section();
 		Section( int i );
@@ -54,16 +59,20 @@ class Section
 		int size;
 		int logical;
 
-		enum HandleMode {
-			WithHandle,
-			WithoutHandle
+		const QColor & color() const;	///< Group color
+
+		enum DrawMode {
+			DrawNothing = 0,
+			DrawHandle = 1,
+			DrawRibbon = 2
 		};
 
 		void draw( QPainter & painter, int x, int y, int height, const QString & text,
-				HandleMode handleMode = WithHandle ) const;
+				DrawMode drawMode = DrawNothing ) const;
 
 		static void draw( QPainter & painter, int x, int y, int width, int height,
-				const QString & text, HandleMode handleMode );
+				const QString & text, DrawMode drawMode, const QColor & ribbonColor = QColor() );
+
 };
 
 #endif

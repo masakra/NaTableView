@@ -38,16 +38,25 @@ Section::Section( int i )
 {
 }
 
+const QColor &
+Section::color() const
+{
+	if ( m_color_cached.isValid() )
+		return m_color_cached;
+
+	return m_color_cached = QColor::fromHsv( logical * 100 % 360, 100, 200 );
+}
+
 void
 Section::draw( QPainter & painter, int x, int y, int height, const QString & text,
-		HandleMode handleMode ) const
+		DrawMode drawMode ) const
 {
-	draw( painter, x, y, size, height, text, handleMode );
+	draw( painter, x, y, size, height, text, drawMode, color() );
 }
 
 void
 Section::draw( QPainter & painter, int x, int y, int width, int height, const QString & text,
-		HandleMode handleMode )
+		DrawMode drawMode, const QColor & colorRibbon )
 {
 	painter.save();
 
@@ -70,7 +79,7 @@ Section::draw( QPainter & painter, int x, int y, int width, int height, const QS
 
 	painter.drawRoundedRect( rect, 3., 5. );
 
-	if ( handleMode == WithHandle ) {
+	if ( drawMode & DrawHandle ) {
 
 		const qreal vStep = rect.height() / 6.0;
 
@@ -93,6 +102,27 @@ Section::draw( QPainter & painter, int x, int y, int width, int height, const QS
 			painter.drawPoint( QPointF( hPos, vPos ) );
 			vPos += qRound( vStep );
 		}
+	}
+	/*
+	\\ ribbon
+	*/
+	if ( drawMode & DrawRibbon ) {
+		const int s1 = qRound( rect.height() * .4 ),
+				  s2 = qRound( rect.height() * .9 );
+
+		QPolygon polygon;
+
+		polygon.append( QPoint( rect.x(), rect.y() + s1 ) );
+		polygon.append( QPoint( rect.x(), rect.y() + s2 ) );
+		polygon.append( QPoint( rect.x() + s2, rect.y() ) );
+		polygon.append( QPoint( rect.x() + s1, rect.y() ) );
+
+		QLinearGradient gradient( 0, rect.top(), 0, rect.top() + s2 );
+		gradient.setColorAt( 0, colorRibbon );
+		gradient.setColorAt( 1, colorRibbon.darker( 400 ) );
+
+		painter.setBrush( QBrush( gradient ) );
+		painter.drawPolygon( polygon );
 	}
 
 	/*
