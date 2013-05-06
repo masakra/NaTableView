@@ -431,7 +431,37 @@ NaHeaderView::mousePressEvent( QMouseEvent * e )
 int
 NaHeaderView::logicalIndexAt( const QPoint & pos ) const
 {
-	if ( pos.y() <= heightGroups() ) {	// область группировки
+	const int x = pos.x(),
+		      y = pos.y();
+
+	if ( y <= heightGroups() ) {	// область группировки
+
+		if ( groups.isEmpty() )
+			return -1;
+
+		// отсечь отступы области группировки: верхний...
+		if ( y < GROUP_AREA_MARGIN )
+			return -1;
+		// ...и нижний ...
+		if ( y > GROUP_AREA_MARGIN + heightColumns() &&
+				y <= heightGroups() )
+			return -1;
+
+		int section_end = GROUP_AREA_MARGIN; // TODO добавить gr_offset
+
+		for ( int s = 0; s < groups.size(); ++s ) {
+			if ( x < section_end )	// попали в левый отступ или закорючку
+				return -1;
+
+			section_end += DEFAULT_SECTION_SIZE;
+
+			if ( x < section_end )
+				return groups[ s ].logical;
+
+			section_end += GROUP_AREA_SPACING;
+		}
+
+		return -1;
 
 	} else {
 
@@ -440,7 +470,7 @@ NaHeaderView::logicalIndexAt( const QPoint & pos ) const
 		for ( int s = 0; s < columns.size(); ++s ) {
 			next_section_start += columns[ s ].size;
 
-			if ( pos.x() < next_section_start )
+			if ( x < next_section_start )
 				return columns[ s ].logical;
 		}
 	}
@@ -454,29 +484,34 @@ NaHeaderView::setupSectionIndicator( int logical, const QPoint & pos )
 	if ( ! sectionIndicator )
 		sectionIndicator = new QLabel( viewport() );
 
-	if ( ! targetMarker )
+	if ( ! targetMarker ) {
 		targetMarker = new QLabel( viewport() );
+		targetMarker->setPixmap( QPixmap(":/target.png") );
+	}
 
 	int px,
 		py,
 		w;
 	const int h = heightColumns();
 
-	int visualIndex = groups.visualIndex( logical );
+	int visual = groups.visualIndex( logical );
 
-	if ( visualIndex != -1 ) {
-		// TODO
+	if ( visual != -1 ) {
+		px = gSectionViewportPosition( visual );
+		py = GROUP_AREA_MARGIN;
+		w = DEFAULT_SECTION_SIZE;
+
 	} else {
-		visualIndex = columns.visualIndex( logical );
+		visual = columns.visualIndex( logical );
 
-		if ( visualIndex != -1 ) {
-			px = cSectionViewportPosition( logical );
+		if ( visual != -1 ) {
+			px = cSectionViewportPosition( visual );
 			py = heightGroups();
-			w = columns[ visualIndex ].size;
+			w = columns[ visual ].size;
 		}
 	}
 
-	if ( visualIndex == -1 )
+	if ( visual == -1 )
 		return;
 
 	sectionIndicator->resize( w, h );
@@ -491,12 +526,9 @@ NaHeaderView::setupSectionIndicator( int logical, const QPoint & pos )
 	Section::draw( painter, 0, 0, w, h, modelData( logical, Qt::DisplayRole ).toString(),
 			Section::WithoutHandle );
 
+
 	sectionIndicator->setPixmap( pixmap );
 	sectionIndicatorOffset = QPoint( pos.x() - px, pos.y() - py );
-
-	// target indicator
-
-	targetMarker->setPixmap( QPixmap(":/target.png") );
 }
 
 void
@@ -620,13 +652,11 @@ NaHeaderView::mouseReleaseEvent( QMouseEvent * e )
 {
 	switch ( state ) {
 		case MoveSection : {
+			if ( targetMarker->isHidden() )
+				break;
+
 			moveSection();
-							   /*
-			if ( targetIsGroupArea ) {
-				groups.insert( 0, 
-			} else {
-			}
-			*/
+
 			m_section = m_target = -1;
 			sectionIndicator->hide();
 			targetMarker->hide();
