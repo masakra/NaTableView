@@ -39,9 +39,9 @@ NaHeaderView::NaHeaderView( QWidget * parent )
 	  heightGroups_cached( -1 ),
 	  snow_png( QPixmap(":/snow.png") ),
 	  wind_png( ":/wind.png" ),
+	  m_resizedSectionViewportPosition( -1 ),
 	  sectionIndicator( 0 ),
-	  targetMarker( 0 ),
-	  m_resizedSectionViewportPosition( -1 )
+	  targetMarker( 0 )
 {
 	setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
 	setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
@@ -217,7 +217,6 @@ NaHeaderView::heightSections( const Sections & sections ) const
 int
 NaHeaderView::heightHint()
 {
-	//return heightSections( columns ) + heightSections( groups ) + 2 * GROUP_AREA_MARGIN;
 	return heightColumns() + heightGroups();
 }
 
@@ -264,7 +263,7 @@ NaHeaderView::paintEvent( QPaintEvent * e )
 
 		Section::draw( painter, pos, GROUP_AREA_MARGIN, DEFAULT_SECTION_SIZE, heightColumns(),
 				modelData( groups[ i ].logical, Qt::DisplayRole ).toString(),
-				Section::DrawRibbon, groups[ i ].color() );
+				Section::DrawRibbon, groups[ i ].color );
 	}
 
 	/*
@@ -583,7 +582,7 @@ NaHeaderView::updateTargetMarker( const QPoint & pos )
 
 			x = gSectionViewportPosition( visual );
 
-			int sectionCenter = ( x + DEFAULT_SECTION_SIZE ) / 2;
+			int sectionCenter = x + DEFAULT_SECTION_SIZE / 2;
 
 			if ( sectionCenter >= pos.x() )
 				m_target = visual;
@@ -735,6 +734,12 @@ NaHeaderView::moveSection()
 	viewport()->update();
 }
 
+bool
+NaHeaderView::groupped() const
+{
+	return ! groups.isEmpty();
+}
+
 /*
 bool
 NaHeaderView::sectionInGroups( int logical ) const
@@ -752,4 +757,22 @@ NaHeaderView::sectionInGroups( int logical ) const
 	return ! groups_less;
 }
 */
+
+int
+NaHeaderView::columnsCount() const
+{
+	return columns.count();
+}
+
+const Section &
+NaHeaderView::section( int visual ) const
+{
+	return columns[ visual ];
+}
+
+QVector< int >
+NaHeaderView::groupsLogicals() const
+{
+	return groups.logicals();
+}
 

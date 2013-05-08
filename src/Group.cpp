@@ -24,45 +24,107 @@
  *   OTHER DEALINGS IN THE SOFTWARE.                                       *
  ***************************************************************************/
 
-#include "Sections.h"
+#include "Group.h"
 
-Sections::Sections()
-	: QVector< Section >()
+#include <QAbstractItemModel>
+
+#include <QDebug>
+
+uint qHash( const QVariant & var )
 {
+	return qHash( var.toString() );
+}
+
+Group::Group()
+	: m_parent( 0 ), m_logical( -1 )
+{
+}
+
+Group::Group( int logical, int row, Group * parent )
+	: m_parent( parent ), m_logical( logical )
+{
+	rows << row;
+}
+
+void
+Group::operator<<( int i )
+{
+	rows << i;
+}
+
+void
+Group::buildGroupsForColumns( QVector< int > logicals, const QAbstractItemModel * model )
+{
+	QVector< int > inners = logicals.mid( 1 );
+
+	for ( register int r = 0; r < model->rowCount(); ++r ) {
+		const QVariant key = model->index( r, logicals.first() ).data( Qt::DisplayRole );
+
+		if ( contains( key ) ) {
+			( *this )[ key ] << r;
+		} else {
+			Group group( logicals.first(), r, this );
+
+			if ( ! inners.isEmpty() )
+				buildGroupsForColumns( inners, model );
+
+			insert( key, group );
+		}
+	}
 }
 
 int
-Sections::pos( int sec ) const
+Group::height( int heightGroup, int heightRow ) const
 {
-	if ( sec >= size() )
-		return -1;
+	if ( isEmpty() ) {
+		return heightRow * rows.count() + heightGroup;
 
-	int p = 0;
+	} else {
+		int h = 0;
 
-	for ( register int i = 0; i < sec; ++i )
-		p += at( i ).size;
+		Groups::const_iterator i = constBegin();
 
-	return p;
+		while ( i != constEnd() ) {
+
+			h += i.value().height( heightGroup, heightRow );
+
+			++i;
+		}
+
+		return h;
+	}
+}
+
+void
+Group::clear()
+{
+	Groups::clear();
+	rows.clear();
+}
+
+void
+Group::groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr ) const
+{
+	int next_group_pos = 0;
+
+	Groups::const_iterator i = constBegin();
+
+	while( i != constEnd() ) {
+		next_group_pos += i.value().height( heightGroup, heightRow );
+
+		if ( pos < next_group_pos ) {
+			gPtr << i.key();
+			i.value().groupAt( pos, heightGroup, heightRow, gPtr );
+			return;
+		}
+
+		++i;
+	}
 }
 
 int
-Sections::visualIndex( int logical ) const
+Group::logicalForGroup( GroupPointer gPtr, int deep ) const
 {
-	for ( int i = 0; i < size(); ++i )
-		if ( at( i ).logical == logical )
-			return i;
-
-	return -1;
-}
-
-QVector< int >
-Sections::logicals() const
-{
-	QVector< int > vector;
-
-	for ( int i = 0; i < size(); ++i )
-		vector << at( i ).logical;
-
-	return vector;
+	///////// CONTINUE
 }
 

@@ -32,7 +32,11 @@
 #ifndef NATABLEVIEW_H
 #define NATABLEVIEW_H
 
+#define COLOR_GRID Qt::gray
+#define COLOR_TEXT Qt::black
+
 #include <QAbstractItemView>
+#include "Group.h"
 
 class NaHeaderView;
 
@@ -44,6 +48,26 @@ class NaTableView : public QAbstractItemView
 		void createHeader();
 
 		NaHeaderView * header;
+
+		//bool groupped() const;
+
+		int visualRowIndexAt( int pos ) const;
+
+		GroupPointer groupAt( int pos ) const;
+
+		int heightRow() const;
+
+		mutable int height_row_cached;
+
+		int m_offset;
+
+		int rowViewportPosition( int visual ) const;
+
+		void drawCell( QPainter & painter, const QRect & cell, const QModelIndex & modelIndex ) const;
+
+		Group rootGroup;	///< корневая группа
+
+		void buildRootGroup();
 
 	private Q_SLOTS:
 		void groupsChanged( int old_count, int new_count );
@@ -68,6 +92,8 @@ class NaTableView : public QAbstractItemView
 		*/
 		virtual void setSelection( const QRect & rect, QItemSelectionModel::SelectionFlags flags );
 		virtual QRegion visualRegionForSelection( const QItemSelection & selection ) const;
+
+		virtual void paintEvent( QPaintEvent * e );
 
 		// ------------------------------
 		virtual void updateGeometries();

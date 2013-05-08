@@ -59,7 +59,7 @@ class Section
 		int size;
 		int logical;
 
-		const QColor & color() const;	///< Group color
+		QColor color;
 
 		enum DrawMode {
 			DrawNothing = 0,
@@ -72,7 +72,6 @@ class Section
 
 		static void draw( QPainter & painter, int x, int y, int width, int height,
 				const QString & text, DrawMode drawMode, const QColor & ribbonColor = QColor() );
-
 };
 
 #endif

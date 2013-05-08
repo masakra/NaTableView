@@ -2,6 +2,7 @@
 #include <QApplication>
 
 #include <QtSql>
+#include <QSortFilterProxyModel>
 
 #include "NaTableView.h"
 
@@ -20,9 +21,14 @@ main( int argc, char ** argv )
 	ntv.resize( 1024, 550 );
 	QSqlQueryModel model;
 
+	QSortFilterProxyModel proxy;
+	proxy.setSourceModel( &model );
+	proxy.sort( 0 );
+	proxy.setDynamicSortFilter( true );
+
 	model.setQuery( "SELECT * FROM test" );
 
-	ntv.setModel( &model );
+	ntv.setModel( &proxy );
 	ntv.show();
 
 

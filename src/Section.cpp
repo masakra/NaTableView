@@ -34,24 +34,16 @@ Section::Section()
 }
 
 Section::Section( int i )
-	: size( DEFAULT_SECTION_SIZE ), logical( i )
+	: size( DEFAULT_SECTION_SIZE ), logical( i ),
+	  color( QColor::fromHsv( logical * 100 % 360, 100, 200 ) )
 {
-}
-
-const QColor &
-Section::color() const
-{
-	if ( m_color_cached.isValid() )
-		return m_color_cached;
-
-	return m_color_cached = QColor::fromHsv( logical * 100 % 360, 100, 200 );
 }
 
 void
 Section::draw( QPainter & painter, int x, int y, int height, const QString & text,
 		DrawMode drawMode ) const
 {
-	draw( painter, x, y, size, height, text, drawMode, color() );
+	draw( painter, x, y, size, height, text, drawMode, color );
 }
 
 void
@@ -72,8 +64,6 @@ Section::draw( QPainter & painter, int x, int y, int width, int height, const QS
 	QLinearGradient bgGradient( 0, rect.top(), 0, rect.bottom() - 1 );
 	bgGradient.setColorAt( 0, COLOR_GRAD_BEGIN );
 	bgGradient.setColorAt( 1, COLOR_GRAD_END );
-
-	//QBrush bg( bgGradient );
 
 	painter.fillRect( rect, QBrush( bgGradient ) );
 
@@ -103,9 +93,11 @@ Section::draw( QPainter & painter, int x, int y, int width, int height, const QS
 			vPos += qRound( vStep );
 		}
 	}
+
 	/*
 	\\ ribbon
 	*/
+
 	if ( drawMode & DrawRibbon ) {
 		const int s1 = qRound( rect.height() * .4 ),
 				  s2 = qRound( rect.height() * .9 );
@@ -121,6 +113,7 @@ Section::draw( QPainter & painter, int x, int y, int width, int height, const QS
 		gradient.setColorAt( 0, colorRibbon );
 		gradient.setColorAt( 1, colorRibbon.darker( 400 ) );
 
+		painter.setPen( Qt::NoPen );
 		painter.setBrush( QBrush( gradient ) );
 		painter.drawPolygon( polygon );
 	}

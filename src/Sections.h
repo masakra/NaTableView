@@ -44,6 +44,8 @@ class Sections : public QVector< Section >
 		int pos( int sec ) const;
 
 		int visualIndex( int logical ) const;
+
+		QVector< int > logicals() const;
 };
 
 #endif

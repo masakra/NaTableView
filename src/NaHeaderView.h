@@ -80,10 +80,10 @@ class NaHeaderView : public QAbstractItemView
 		QPixmap wind_png;
 
 		int gVisualIndexAt( int pos ) const;
-		int cVisualIndexAt( int pos ) const;
+		//int cVisualIndexAt( int pos ) const;	moved to puclic:
 
 		int gSectionViewportPosition( int visual ) const;
-		int cSectionViewportPosition( int visual ) const;
+		//int cSectionViewportPosition( int visual ) const;	 moved to public:
 
 		int sectionHandleAt( int pos ) const;
 
@@ -149,6 +149,18 @@ class NaHeaderView : public QAbstractItemView
 		virtual void setModel( QAbstractItemModel * model );
 
 		int heightHint();
+
+		int cVisualIndexAt( int pos ) const;
+
+		int cSectionViewportPosition( int visual ) const;
+
+		int columnsCount() const;
+
+		bool groupped() const;
+
+		const Section & section( int visual ) const;
+
+		QVector< int > groupsLogicals() const;
 
 	public Q_SLOTS:
 		void headerDataChanged( Qt::Orientation, int logicalFirst, int logicalLast );

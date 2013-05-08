@@ -24,45 +24,50 @@
  *   OTHER DEALINGS IN THE SOFTWARE.                                       *
  ***************************************************************************/
 
-#include "Sections.h"
+ /** \class Group
+  *
+  * \brief 
+  */
 
-Sections::Sections()
-	: QVector< Section >()
+#ifndef GROUP_H
+#define GROUP_H
+
+#include <QVariant>
+#include <QVector>
+
+class Group;
+
+typedef QVector< QVariant > GroupPointer;
+typedef QHash< QVariant, Group > Groups;	// вложенные группы
+
+class QAbstractItemModel;
+
+class Group : public Groups // наследует вложенные группы
 {
-}
+	private:
+		Group * m_parent;
 
-int
-Sections::pos( int sec ) const
-{
-	if ( sec >= size() )
-		return -1;
+		QVector< int > rows;				///< вложенные строки
 
-	int p = 0;
+		int m_logical;
 
-	for ( register int i = 0; i < sec; ++i )
-		p += at( i ).size;
+	public:
+		Group();
+		Group( int logical, int row, Group * parent );
 
-	return p;
-}
+		void buildGroupsForColumns( QVector< int > logicals, const QAbstractItemModel * model );
 
-int
-Sections::visualIndex( int logical ) const
-{
-	for ( int i = 0; i < size(); ++i )
-		if ( at( i ).logical == logical )
-			return i;
+		int height( int heightGroup, int heightRow ) const;
 
-	return -1;
-}
+		void clear();
 
-QVector< int >
-Sections::logicals() const
-{
-	QVector< int > vector;
+		void operator<<( int i );
 
-	for ( int i = 0; i < size(); ++i )
-		vector << at( i ).logical;
+		void groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr ) const;
 
-	return vector;
-}
+		int logicalForGroup( GroupPointer gPtr, int deep = -1 ) const;
+};
+
+#endif
+
 

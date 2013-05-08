@@ -32,7 +32,9 @@
 #include <QDebug>
 
 NaTableView::NaTableView( QWidget * parent )
-	: QAbstractItemView( parent )
+	: QAbstractItemView( parent ),
+	  height_row_cached( -1 ),
+	  m_offset( 0 )
 {
 	createHeader();
 }
@@ -126,5 +128,138 @@ NaTableView::groupsChanged( int old_count, int new_count )	// slot
 	if ( ! old_count || ! new_count )
 		updateGeometries();
 
+	if ( new_count )
+		buildRootGroup();
+	else
+		rootGroup.clear();
+
 	viewport()->update();
 }
+
+void
+NaTableView::buildRootGroup()
+{
+	rootGroup.clear();
+	rootGroup.buildGroupsForColumns( header->groupsLogicals(), model() );
+}
+
+void
+NaTableView::paintEvent( QPaintEvent * e )
+{
+	QPainter painter( viewport() );
+
+	if ( rootGroup.isEmpty() ) {
+		// TODO
+		int firstVisualColumn = header->cVisualIndexAt( e->rect().left() ),
+		    lastVisualColumn = header->cVisualIndexAt( e->rect().right() );
+
+		if ( firstVisualColumn == -1 )
+			firstVisualColumn = 0;
+
+		if ( lastVisualColumn == -1 )
+			lastVisualColumn = header->columnsCount() - 1;
+
+		int firstVisualRow = visualRowIndexAt( 0 ),
+			lastVisualRow = visualRowIndexAt( viewport()->height() );
+
+		if ( firstVisualRow == -1 )
+			firstVisualRow = 0;
+
+		if ( lastVisualRow == -1 )
+			lastVisualRow = model()->rowCount() - 1;
+
+		int hoff = header->cSectionViewportPosition( firstVisualColumn ),
+			voff = rowViewportPosition( firstVisualRow ),
+			colw;
+
+		QRect cell( hoff, voff, 0, heightRow() );
+
+		for ( int r = firstVisualRow; r <= lastVisualRow; ++r ) {
+			for ( int c = firstVisualColumn; c <= lastVisualColumn; ++c ) {
+				colw = header->section( c ).size;
+				cell.setWidth( colw );
+
+				drawCell( painter, cell, model()->index( r, header->section( c ).logical ) );
+
+				cell.setX( cell.x() + colw );
+			}
+			cell.setX( hoff );
+			cell.moveTop( cell.y() + heightRow() );
+		}
+
+	} else {	// draw groups
+
+		GroupPointer firstVisualGroup = groupAt( e->rect().top() ),
+					 lastVisualGroup = groupAt( e->rect().bottom() );
+
+
+	}
+}
+
+int
+NaTableView::visualRowIndexAt( int pos ) const
+{
+	if ( heightRow() == 0 )
+		return -1;
+
+	const int row = ( pos + m_offset ) / heightRow();
+
+	if ( row != 0 && row > model()->rowCount() - 1 )
+		return -1;
+
+	return row;
+}
+
+int
+NaTableView::heightRow() const
+{
+	if ( height_row_cached != -1 )
+		return height_row_cached;
+
+	QFontMetrics fm( font() );
+
+	return height_row_cached = qRound( fm.height() * 1.3 );
+}
+
+int
+NaTableView::rowViewportPosition( int visual ) const
+{
+	if ( rootGroup.isEmpty() ) {
+		return visual * heightRow() - m_offset;
+	} else {
+	}
+}
+
+void
+NaTableView::drawCell( QPainter & painter, const QRect & cell, const QModelIndex & modelIndex ) const
+{
+	painter.save();
+
+	painter.setPen( QPen( COLOR_GRID ) );
+
+	painter.drawLine( cell.bottomLeft(), cell.bottomRight() );
+	painter.drawLine( cell.topRight(), cell.bottomRight() );
+	/*
+	\\ text
+	*/
+	QRect rectText( cell );
+	rectText.setLeft( rectText.left() + 3 );
+	rectText.setRight( rectText.right() - 1 );
+
+	painter.setPen( QPen( COLOR_TEXT ) );
+	painter.drawText( rectText, Qt::AlignLeft | Qt::AlignVCenter | Qt::TextSingleLine,
+			modelIndex.data( Qt::DisplayRole ).toString() );
+
+	painter.restore();
+}
+
+GroupPointer
+NaTableView::groupAt( int pos ) const
+{
+	GroupPointer gPtr;
+
+	rootGroup.groupAt( pos, 25, 20, gPtr );
+
+	return gPtr;
+}
+
