@@ -149,7 +149,6 @@ NaTableView::paintEvent( QPaintEvent * e )
 	QPainter painter( viewport() );
 
 	if ( rootGroup.isEmpty() ) {
-		// TODO
 		int firstVisualColumn = header->cVisualIndexAt( e->rect().left() ),
 		    lastVisualColumn = header->cVisualIndexAt( e->rect().right() );
 
@@ -192,8 +191,40 @@ NaTableView::paintEvent( QPaintEvent * e )
 		GroupPointer firstVisualGroup = groupAt( e->rect().top() ),
 					 lastVisualGroup = groupAt( e->rect().bottom() );
 
+		if ( lastVisualGroup.isEmpty() )
+			lastVisualGroup << rootGroup.lastGroupKey();
 
+		qDebug() << firstVisualGroup[ 0 ] << lastVisualGroup[ 0 ];
+
+		int hoff = rootGroup.groupPosition( 20, 25, firstVisualGroup );
+
+		drawGroup( painter, firstVisualGroup, hoff );
 	}
+}
+
+void
+NaTableView::drawGroup( QPainter & painter, const GroupPointer & gPtr, int pos )
+{
+	const QColor color = header->colorGroup( gPtr.size() - 1 );
+
+	qDebug() << gPtr.size() << color;
+
+	QRect rect( 0, pos, viewport()->width(), 25 );
+
+	painter.save();
+
+	QLinearGradient gradient( 0, pos, 0, pos + 25 );
+	gradient.setColorAt( 0, color );
+	gradient.setColorAt( 1, color.darker( 300 ) );
+
+	painter.setPen( QPen( color.darker( 400 ) ) );
+	painter.setBrush( QBrush( gradient ) );
+
+	painter.drawRect( rect );
+
+
+	painter.restore();
+
 }
 
 int

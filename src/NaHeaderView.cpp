@@ -776,3 +776,13 @@ NaHeaderView::groupsLogicals() const
 	return groups.logicals();
 }
 
+QColor
+NaHeaderView::colorGroup( int visual ) const
+{
+	if ( visual >= groups.count() )
+		return QColor();
+
+	return groups[ visual ].color;
+}
+
+

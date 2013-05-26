@@ -69,6 +69,8 @@ class NaTableView : public QAbstractItemView
 
 		void buildRootGroup();
 
+		void drawGroup( QPainter & painter, const GroupPointer & gPtr, int pos );
+
 	private Q_SLOTS:
 		void groupsChanged( int old_count, int new_count );
 

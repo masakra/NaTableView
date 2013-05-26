@@ -35,10 +35,13 @@
 #include <QVariant>
 #include <QVector>
 
+//#include "GroupKey.h"
+#include "GroupPointer.h"
+
 class Group;
 
-typedef QVector< QVariant > GroupPointer;
-typedef QHash< QVariant, Group > Groups;	// вложенные группы
+//typedef QVector< GroupKey > GroupPointer;	// reimlemented as class
+typedef QMap< GroupKey, Group > Groups;	// вложенные группы
 
 class QAbstractItemModel;
 
@@ -49,11 +52,9 @@ class Group : public Groups // наследует вложенные групп�
 
 		QVector< int > rows;				///< вложенные строки
 
-		int m_logical;
-
 	public:
 		Group();
-		Group( int logical, int row, Group * parent );
+		Group( int row, Group * parent );
 
 		void buildGroupsForColumns( QVector< int > logicals, const QAbstractItemModel * model );
 
@@ -65,7 +66,9 @@ class Group : public Groups // наследует вложенные групп�
 
 		void groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr ) const;
 
-		int logicalForGroup( GroupPointer gPtr, int deep = -1 ) const;
+		int groupPosition( int heightGroup, int heightRow, const GroupPointer & gPtr ) const;
+
+		QVariant lastGroupKey() const;
 };
 
 #endif

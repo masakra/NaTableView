@@ -165,6 +165,8 @@ class NaHeaderView : public QAbstractItemView
 	public Q_SLOTS:
 		void headerDataChanged( Qt::Orientation, int logicalFirst, int logicalLast );
 
+		QColor colorGroup( int visual ) const;
+
 	Q_SIGNALS:
 		void groupsChanged( int old_count, int new_count );
 };

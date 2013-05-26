@@ -1,4 +1,11 @@
 /***************************************************************************
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  *   Copyright (C) 2013 by Sergey N Chursanov                              *
  *                                                                         *
  *   email: masakra@mail.ru                                                *
@@ -30,18 +37,20 @@
 
 #include <QDebug>
 
+/*
 uint qHash( const QVariant & var )
 {
 	return qHash( var.toString() );
 }
+*/
 
 Group::Group()
-	: m_parent( 0 ), m_logical( -1 )
+	: m_parent( 0 )
 {
 }
 
-Group::Group( int logical, int row, Group * parent )
-	: m_parent( parent ), m_logical( logical )
+Group::Group( int row, Group * parent )
+	: m_parent( parent )
 {
 	rows << row;
 }
@@ -58,12 +67,12 @@ Group::buildGroupsForColumns( QVector< int > logicals, const QAbstractItemModel 
 	QVector< int > inners = logicals.mid( 1 );
 
 	for ( register int r = 0; r < model->rowCount(); ++r ) {
-		const QVariant key = model->index( r, logicals.first() ).data( Qt::DisplayRole );
+		const GroupKey key = model->index( r, logicals.first() ).data( Qt::DisplayRole );
 
 		if ( contains( key ) ) {
 			( *this )[ key ] << r;
 		} else {
-			Group group( logicals.first(), r, this );
+			Group group( r, this );
 
 			if ( ! inners.isEmpty() )
 				buildGroupsForColumns( inners, model );
@@ -123,8 +132,51 @@ Group::groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr ) c
 }
 
 int
-Group::logicalForGroup( GroupPointer gPtr, int deep ) const
+Group::groupPosition( int heightGroup, int heightRow, const GroupPointer & gPtr ) const
 {
-	///////// CONTINUE
+	if ( gPtr.isEmpty() )
+		return 0;
+
+	if ( ! contains( gPtr.head() ) )
+		return 0;
+
+	int pos = 0;
+
+	Groups::const_iterator i = constBegin();
+
+	while ( i != constEnd() ) {
+
+		if ( i.key() != gPtr.head() ) {
+			pos += i.value().height( heightGroup, heightRow );
+
+		} else {
+			if ( gPtr.isSingle() )
+				return pos;
+			else
+				return pos + i.value().groupPosition( heightGroup, heightRow, gPtr.shifted() );
+		}
+
+		++i;
+	}
+
+	return 0;
 }
+
+QVariant
+Group::lastGroupKey() const
+{
+	QVariant iter;
+
+	Groups::const_iterator i = constBegin();
+
+	while ( i != constEnd() ) {
+
+		iter = i.key();
+
+		++i;
+	}
+
+	return iter;
+}
+
 

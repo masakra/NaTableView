@@ -49,9 +49,6 @@ class QString;
 
 class Section
 {
-	private:
-		mutable QColor m_color_cached;
-
 	public:
 		Section();
 		Section( int i );
