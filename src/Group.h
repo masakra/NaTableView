@@ -40,7 +40,6 @@
 
 class Group;
 
-//typedef QVector< GroupKey > GroupPointer;	// reimlemented as class
 typedef QMap< GroupKey, Group > Groups;	// вложенные группы
 
 class QAbstractItemModel;
@@ -50,7 +49,7 @@ class Group : public Groups // наследует вложенные групп�
 	private:
 		Group * m_parent;
 
-		QVector< int > rows;				///< вложенные строки
+		QVector< int > m_rows;				///< вложенные строки
 
 	public:
 		Group();
@@ -64,11 +63,18 @@ class Group : public Groups // наследует вложенные групп�
 
 		void operator<<( int i );
 
-		void groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr ) const;
+		void groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr,
+				int group_pos = 0 ) const;
 
 		int groupPosition( int heightGroup, int heightRow, const GroupPointer & gPtr ) const;
 
 		QVariant lastGroupKey() const;
+
+		void addRowLogical( int row_logical );
+
+		const Group * group( const GroupPointer & gPtr );
+
+		const QVector< int > & rows() const;
 };
 
 #endif

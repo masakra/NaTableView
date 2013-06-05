@@ -149,7 +149,7 @@ NaHeaderView::headerDataChanged( Qt::Orientation, int logicalFirst, int logicalL
 void
 NaHeaderView::initializeSections()
 {
-	const int oldCount = columns.count() + groups.count(),
+	const int oldCount = s_columns.count() + s_groups.count(),
 			  newCount = model()->columnCount();
 
 	if ( newCount <= 0 )
@@ -161,7 +161,7 @@ NaHeaderView::initializeSections()
 		const int min = qBound( 0, oldCount, newCount - 1 );
 
 		for ( register int s = min; s <= newCount - 1; ++s )
-			columns.append( s );
+			s_columns.append( s );
 	}
 	// STUB
 	//groups.append( 10 );
@@ -191,7 +191,7 @@ NaHeaderView::heightColumns() const
 	if ( heightColumns_cached > -1 )
 		return heightColumns_cached;
 
-	return heightColumns_cached = heightSections( columns );
+	return heightColumns_cached = heightSections( s_columns );
 }
 
 int
@@ -200,7 +200,7 @@ NaHeaderView::heightGroups() const
 	if ( heightGroups_cached > -1 )
 		return heightGroups_cached;
 
-	return heightGroups_cached = heightSections( groups ) + GROUP_AREA_MARGIN + GROUP_AREA_MARGIN;
+	return heightGroups_cached = heightSections( s_groups ) + GROUP_AREA_MARGIN + GROUP_AREA_MARGIN;
 }
 
 int
@@ -241,7 +241,7 @@ NaHeaderView::paintEvent( QPaintEvent * e )
 		end = gVisualIndexAt( e->rect().right() );
 
 	start = ( start == -1 ? 0 : start );
-	end = ( end == -1 ? groups.count() - 1 : end );
+	end = ( end == -1 ? s_groups.count() - 1 : end );
 
 	// размеры закорючки
 	const int small = GROUP_AREA_SPACING / 2,
@@ -262,8 +262,8 @@ NaHeaderView::paintEvent( QPaintEvent * e )
 		}
 
 		Section::draw( painter, pos, GROUP_AREA_MARGIN, DEFAULT_SECTION_SIZE, heightColumns(),
-				modelData( groups[ i ].logical, Qt::DisplayRole ).toString(),
-				Section::DrawRibbon, groups[ i ].color );
+				modelData( s_groups[ i ].logical, Qt::DisplayRole ).toString(),
+				Section::DrawRibbon, s_groups[ i ].color );
 	}
 
 	/*
@@ -276,13 +276,13 @@ NaHeaderView::paintEvent( QPaintEvent * e )
 	end = cVisualIndexAt( e->rect().right() );
 
 	start = ( start == -1 ? 0 : start );
-	end = ( end == -1 ? columns.count() - 1 : end );
+	end = ( end == -1 ? s_columns.count() - 1 : end );
 
 	for ( register int i = start; i <= end; ++i ) {
-		const int pos = columns.pos( i );
+		const int pos = s_columns.pos( i );
 
-		columns[ i ].draw( painter, pos, heightGroups(), heightColumns(),
-				modelData( columns[ i ].logical, Qt::DisplayRole ).toString(), Section::DrawHandle );
+		s_columns[ i ].draw( painter, pos, heightGroups(), heightColumns(),
+				modelData( s_columns[ i ].logical, Qt::DisplayRole ).toString(), Section::DrawHandle );
 	}
 }
 
@@ -291,7 +291,7 @@ NaHeaderView::gVisualIndexAt( int pos ) const
 {
 	const int virtual_sec = pos / ( DEFAULT_SECTION_SIZE + GROUP_AREA_SPACING );
 
-	return virtual_sec < groups.size() ? virtual_sec : -1;
+	return virtual_sec < s_groups.size() ? virtual_sec : -1;
 }
 
 int
@@ -299,9 +299,9 @@ NaHeaderView::cVisualIndexAt( int pos ) const
 {
 	int next_section_pos = m_gr_offset - m_offset;
 
-	for ( register int i = 0; i < columns.count(); ++i ) {
+	for ( register int i = 0; i < s_columns.count(); ++i ) {
 
-		next_section_pos += columns[ i ].size;
+		next_section_pos += s_columns[ i ].size;
 
 		if ( pos < next_section_pos )
 			return i;
@@ -374,7 +374,7 @@ NaHeaderView::sectionHandleAt( int pos ) const
 	if ( visual == -1 )
 		return -1;
 
-	const int sectionWidth = columns[ visual ].size,
+	const int sectionWidth = s_columns[ visual ].size,
 			  sectionPos = cSectionViewportPosition( visual );
 
 	if ( pos >= ( sectionWidth + sectionPos - HANDLE_WIDTH ) )
@@ -393,7 +393,7 @@ int
 NaHeaderView::cSectionViewportPosition( int visual ) const
 {
 	// TODO добавить offset
-	return columns.pos( visual );
+	return s_columns.pos( visual );
 }
 
 void
@@ -418,7 +418,7 @@ NaHeaderView::mousePressEvent( QMouseEvent * e )
 		setupSectionIndicator( m_section, e->pos() );
 
 	} else {				// меняется размер секции
-		m_originalSize = columns[ handle ].size;
+		m_originalSize = s_columns[ handle ].size;
 		state = ResizeSection;
 		m_section = handle;
 	}
@@ -435,7 +435,7 @@ NaHeaderView::logicalIndexAt( const QPoint & pos ) const
 
 	if ( y <= heightGroups() ) {	// область группировки
 
-		if ( groups.isEmpty() )
+		if ( s_groups.isEmpty() )
 			return -1;
 
 		// отсечь отступы области группировки: верхний...
@@ -448,14 +448,14 @@ NaHeaderView::logicalIndexAt( const QPoint & pos ) const
 
 		int section_end = GROUP_AREA_MARGIN; // TODO добавить gr_offset
 
-		for ( int s = 0; s < groups.size(); ++s ) {
+		for ( int s = 0; s < s_groups.size(); ++s ) {
 			if ( x < section_end )	// попали в левый отступ или закорючку
 				return -1;
 
 			section_end += DEFAULT_SECTION_SIZE;
 
 			if ( x < section_end )
-				return groups[ s ].logical;
+				return s_groups[ s ].logical;
 
 			section_end += GROUP_AREA_SPACING;
 		}
@@ -466,11 +466,11 @@ NaHeaderView::logicalIndexAt( const QPoint & pos ) const
 
 		int next_section_start = 0;		// TODO добавить offset
 
-		for ( int s = 0; s < columns.size(); ++s ) {
-			next_section_start += columns[ s ].size;
+		for ( int s = 0; s < s_columns.size(); ++s ) {
+			next_section_start += s_columns[ s ].size;
 
 			if ( x < next_section_start )
-				return columns[ s ].logical;
+				return s_columns[ s ].logical;
 		}
 	}
 
@@ -493,7 +493,7 @@ NaHeaderView::setupSectionIndicator( int logical, const QPoint & pos )
 		w;
 	const int h = heightColumns();
 
-	int visual = groups.visualIndex( logical );
+	int visual = s_groups.visualIndex( logical );
 
 	if ( visual != -1 ) {
 		px = gSectionViewportPosition( visual );
@@ -501,12 +501,12 @@ NaHeaderView::setupSectionIndicator( int logical, const QPoint & pos )
 		w = DEFAULT_SECTION_SIZE;
 
 	} else {
-		visual = columns.visualIndex( logical );
+		visual = s_columns.visualIndex( logical );
 
 		if ( visual != -1 ) {
 			px = cSectionViewportPosition( visual );
 			py = heightGroups();
-			w = columns[ visual ].size;
+			w = s_columns[ visual ].size;
 		}
 	}
 
@@ -570,7 +570,7 @@ NaHeaderView::updateTargetMarker( const QPoint & pos )
 
 	if ( targetIsGroupArea ) {
 
-		if ( groups.isEmpty() ) {
+		if ( s_groups.isEmpty() ) {
 			x = GROUP_AREA_MARGIN;
 			m_target = 0;
 
@@ -578,7 +578,7 @@ NaHeaderView::updateTargetMarker( const QPoint & pos )
 			int visual = gVisualIndexAt( pos.x() );
 
 			if ( visual == -1 )
-				visual = groups.count() - 1;
+				visual = s_groups.count() - 1;
 
 			x = gSectionViewportPosition( visual );
 
@@ -599,17 +599,17 @@ NaHeaderView::updateTargetMarker( const QPoint & pos )
 		int visual = cVisualIndexAt( pos.x() );
 
 		if ( visual == -1 )
-			visual = columns.count() - 1;
+			visual = s_columns.count() - 1;
 
 		x = cSectionViewportPosition( visual );
 
-		int sectionCenter = x + columns[ visual ].size / 2;
+		int sectionCenter = x + s_columns[ visual ].size / 2;
 
 		if ( sectionCenter >= pos.x() ) {
 			x -= targetMarker->width() / 2;
 			m_target = visual;
 		} else {
-			x += columns[ visual ].size - targetMarker->width() / 2;
+			x += s_columns[ visual ].size - targetMarker->width() / 2;
 			m_target = visual + 1;
 		}
 
@@ -623,15 +623,15 @@ NaHeaderView::updateTargetMarker( const QPoint & pos )
 void
 NaHeaderView::resizeSection( int visual, int size )
 {
-	if ( visual < 0 || visual >= columns.count() )
+	if ( visual < 0 || visual >= s_columns.count() )
 		return;
 
-	const int oldSize = columns[ visual ].size;
+	const int oldSize = s_columns[ visual ].size;
 
 	if ( oldSize == size )
 		return;
 
-	columns[ visual ].size = size;
+	s_columns[ visual ].size = size;
 
 	if ( m_resizedSectionViewportPosition == -1 )
 		m_resizedSectionViewportPosition = cSectionViewportPosition( visual );
@@ -685,12 +685,12 @@ NaHeaderView::moveSection()
 	if ( m_section == -1 )
 		return;
 
-	int visual_from = groups.visualIndex( m_section );
+	int visual_from = s_groups.visualIndex( m_section );
 
 	const bool from_groups = visual_from != -1;
 
 	if ( ! from_groups )
-		visual_from = columns.visualIndex( m_section );
+		visual_from = s_columns.visualIndex( m_section );
 
 	if ( from_groups == targetIsGroupArea &&
 			visual_from == m_target ) {
@@ -698,13 +698,13 @@ NaHeaderView::moveSection()
 		return;
 	}
 
-	const int oldGroupsCount = groups.count();
+	const int oldGroupsCount = s_groups.count();
 
-	Sections & secs = targetIsGroupArea ? groups : columns;
+	Sections & secs = targetIsGroupArea ? s_groups : s_columns;
 
 	//const bool pasteLast = targetIsGroupArea ? m_target == groups.size() : m_target == columns.size();
 
-	const Section sec = from_groups ? groups[ visual_from ] : columns[ visual_from ];
+	const Section sec = from_groups ? s_groups[ visual_from ] : s_columns[ visual_from ];
 
 	// добавление секции
 
@@ -721,14 +721,14 @@ NaHeaderView::moveSection()
 		++visual_from;
 
 	if ( from_groups )
-		groups.remove( visual_from );
+		s_groups.remove( visual_from );
 	else
-		columns.remove( visual_from );
+		s_columns.remove( visual_from );
 
 	if ( from_groups || targetIsGroupArea ) {
 		heightGroups_cached = -1;
 
-		emit groupsChanged( oldGroupsCount, groups.count() );
+		emit groupsChanged( oldGroupsCount, s_groups.count() );
 	}
 
 	viewport()->update();
@@ -737,7 +737,7 @@ NaHeaderView::moveSection()
 bool
 NaHeaderView::groupped() const
 {
-	return ! groups.isEmpty();
+	return ! s_groups.isEmpty();
 }
 
 /*
@@ -761,28 +761,36 @@ NaHeaderView::sectionInGroups( int logical ) const
 int
 NaHeaderView::columnsCount() const
 {
-	return columns.count();
+	return s_columns.count();
 }
 
-const Section &
-NaHeaderView::section( int visual ) const
+const Sections &
+NaHeaderView::columns() const
 {
-	return columns[ visual ];
+	return s_columns;
+}
+
+const Sections &
+NaHeaderView::groups() const
+{
+	return s_groups;
 }
 
 QVector< int >
 NaHeaderView::groupsLogicals() const
 {
-	return groups.logicals();
+	return s_groups.logicals();
 }
 
+/*
 QColor
 NaHeaderView::colorGroup( int visual ) const
 {
-	if ( visual >= groups.count() )
+	if ( visual >= s_groups.count() )
 		return QColor();
 
-	return groups[ visual ].color;
+	return s_groups[ visual ].color;
 }
+*/
 
 

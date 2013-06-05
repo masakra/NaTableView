@@ -54,8 +54,8 @@ class NaHeaderView : public QAbstractItemView
 
 		void initializeSections();
 
-		Sections columns,
-				 groups;
+		Sections s_columns,
+				 s_groups;
 
 		int m_offset,			///<
 			m_gr_offset;		///<
@@ -97,7 +97,6 @@ class NaHeaderView : public QAbstractItemView
 
 		QPoint m_firstPos,
 			   m_lastPos;
-
 
 		void setupSectionIndicator( int logical, const QPoint & pos );
 
@@ -158,14 +157,17 @@ class NaHeaderView : public QAbstractItemView
 
 		bool groupped() const;
 
-		const Section & section( int visual ) const;
+		//const Section & section( int visual ) const;
+		const Sections & columns() const;
+
+		const Sections & groups() const;
 
 		QVector< int > groupsLogicals() const;
 
 	public Q_SLOTS:
 		void headerDataChanged( Qt::Orientation, int logicalFirst, int logicalLast );
 
-		QColor colorGroup( int visual ) const;
+		//QColor colorGroup( int visual ) const;
 
 	Q_SIGNALS:
 		void groupsChanged( int old_count, int new_count );

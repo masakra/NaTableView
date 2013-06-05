@@ -1,11 +1,4 @@
 /***************************************************************************
- *
- *
- *
- *
- *
- *
- *
  *   Copyright (C) 2013 by Sergey N Chursanov                              *
  *                                                                         *
  *   email: masakra@mail.ru                                                *
@@ -52,18 +45,29 @@ Group::Group()
 Group::Group( int row, Group * parent )
 	: m_parent( parent )
 {
-	rows << row;
+	m_rows << row;
 }
 
 void
 Group::operator<<( int i )
 {
-	rows << i;
+	m_rows << i;
 }
 
 void
 Group::buildGroupsForColumns( QVector< int > logicals, const QAbstractItemModel * model )
 {
+
+	for ( register int r = 0; r < model->rowCount(); ++r ) {
+
+		//gTGroups * gT
+
+		for ( register int l = 0; l < logicals.size(); ++l ) {
+
+		}
+	}
+
+	/*
 	QVector< int > inners = logicals.mid( 1 );
 
 	for ( register int r = 0; r < model->rowCount(); ++r ) {
@@ -75,18 +79,19 @@ Group::buildGroupsForColumns( QVector< int > logicals, const QAbstractItemModel 
 			Group group( r, this );
 
 			if ( ! inners.isEmpty() )
-				buildGroupsForColumns( inners, model );
+				group.buildGroupsForColumns( inners, model );
 
 			insert( key, group );
 		}
 	}
+	*/
 }
 
 int
 Group::height( int heightGroup, int heightRow ) const
 {
 	if ( isEmpty() ) {
-		return heightRow * rows.count() + heightGroup;
+		return heightRow * m_rows.count() + heightGroup;
 
 	} else {
 		int h = 0;
@@ -100,7 +105,7 @@ Group::height( int heightGroup, int heightRow ) const
 			++i;
 		}
 
-		return h;
+		return h + heightGroup;
 	}
 }
 
@@ -108,22 +113,31 @@ void
 Group::clear()
 {
 	Groups::clear();
-	rows.clear();
+	m_rows.clear();
 }
 
 void
-Group::groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr ) const
+Group::groupAt( int pos, int heightGroup, int heightRow, GroupPointer & gPtr,
+		int group_pos ) const
 {
-	int next_group_pos = 0;
+	if ( pos < group_pos )
+		return;
+
+	int next_group_pos = group_pos;
 
 	Groups::const_iterator i = constBegin();
 
 	while( i != constEnd() ) {
+
+		//qDebug() << i.key();
+
 		next_group_pos += i.value().height( heightGroup, heightRow );
+
+		//qDebug() << "group_pos" << group_pos << "next_group_pos" << next_group_pos;
 
 		if ( pos < next_group_pos ) {
 			gPtr << i.key();
-			i.value().groupAt( pos, heightGroup, heightRow, gPtr );
+			//i.value().groupAt( pos, heightGroup, heightRow, gPtr, group_pos + heightGroup );
 			return;
 		}
 
@@ -179,4 +193,32 @@ Group::lastGroupKey() const
 	return iter;
 }
 
+void
+Group::addRowLogical( int row_logical )
+{
+	m_rows.append( row_logical );
+}
+
+const Group *
+Group::group( const GroupPointer & gPtr )
+{
+	Group * g = this;
+
+	for ( int i = 0; i < gPtr.size(); ++i ) {
+
+		if ( g->contains( gPtr.at( i ) ) )
+			g = & ( *g )[ gPtr.at( i ) ];
+
+		else
+			return 0;
+	}
+
+	return g;
+}
+
+const QVector< int > &
+Group::rows() const
+{
+	return m_rows;
+}
 

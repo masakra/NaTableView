@@ -59,6 +59,10 @@ class NaTableView : public QAbstractItemView
 
 		mutable int height_row_cached;
 
+		int heightGroupRow() const;
+
+		mutable int height_group_row_cached;
+
 		int m_offset;
 
 		int rowViewportPosition( int visual ) const;
@@ -69,7 +73,8 @@ class NaTableView : public QAbstractItemView
 
 		void buildRootGroup();
 
-		void drawGroup( QPainter & painter, const GroupPointer & gPtr, int pos );
+		void drawGroup( QPainter & painter, const GroupPointer & gPtr, int pos,
+				int firstVisualColumn, int lastVisualColumn );
 
 	private Q_SLOTS:
 		void groupsChanged( int old_count, int new_count );
