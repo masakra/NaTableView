@@ -163,8 +163,6 @@ NaHeaderView::initializeSections()
 		for ( register int s = min; s <= newCount - 1; ++s )
 			s_columns.append( s );
 	}
-	// STUB
-	//groups.append( 10 );
 }
 
 void
@@ -278,11 +276,11 @@ NaHeaderView::paintEvent( QPaintEvent * e )
 	start = ( start == -1 ? 0 : start );
 	end = ( end == -1 ? s_columns.count() - 1 : end );
 
-	for ( register int i = start; i <= end; ++i ) {
-		const int pos = s_columns.pos( i );
+	for ( register int s = start; s <= end; ++s ) {
+		const int pos = cSectionViewportPosition( s );
 
-		s_columns[ i ].draw( painter, pos, heightGroups(), heightColumns(),
-				modelData( s_columns[ i ].logical, Qt::DisplayRole ).toString(), Section::DrawHandle );
+		s_columns[ s ].draw( painter, pos, heightGroups(), heightColumns(),
+				modelData( s_columns[ s ].logical, Qt::DisplayRole ).toString(), Section::DrawHandle );
 	}
 }
 
@@ -392,8 +390,7 @@ NaHeaderView::gSectionViewportPosition( int visual ) const
 int
 NaHeaderView::cSectionViewportPosition( int visual ) const
 {
-	// TODO добавить offset
-	return s_columns.pos( visual );
+	return s_columns.pos( visual ) - m_offset;
 }
 
 void
@@ -758,12 +755,6 @@ NaHeaderView::sectionInGroups( int logical ) const
 }
 */
 
-int
-NaHeaderView::columnsCount() const
-{
-	return s_columns.count();
-}
-
 const Sections &
 NaHeaderView::columns() const
 {
@@ -782,15 +773,23 @@ NaHeaderView::groupsLogicals() const
 	return s_groups.logicals();
 }
 
-/*
-QColor
-NaHeaderView::colorGroup( int visual ) const
+void
+NaHeaderView::setOffset( int new_offset )
 {
-	if ( visual >= s_groups.count() )
-		return QColor();
+	if ( m_offset == new_offset )
+		return;
 
-	return s_groups[ visual ].color;
+	const int d = m_offset - new_offset;
+
+	m_offset = new_offset;
+
+	viewport()->scroll( d, 0 );
+
+	if ( state == ResizeSection ) {
+		QPoint curPos = QCursor::pos();
+		QCursor::setPos( curPos.x() + d, curPos.y() );
+		m_firstPos.setX( m_firstPos.x() + d );
+		m_lastPos.setX( m_lastPos.x() + d );
+	}
 }
-*/
-
 

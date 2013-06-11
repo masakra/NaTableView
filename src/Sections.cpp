@@ -66,3 +66,14 @@ Sections::logicals() const
 	return vector;
 }
 
+int
+Sections::length() const
+{
+	int l = 0;
+
+	for ( register int i = 0; i < size(); ++i )
+		l += at( i ).size;
+
+	return l;
+}
+

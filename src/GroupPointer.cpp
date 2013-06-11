@@ -29,3 +29,17 @@ GroupPointer::head() const
 	return first();
 }
 
+void
+GroupPointer::append( const GroupKey & key )
+{
+	if ( key.isValid() )
+		QVector< GroupKey >::append( key );
+}
+
+GroupPointer &
+GroupPointer::operator<<( const GroupKey & key )
+{
+	append( key );
+
+	return *this;
+}

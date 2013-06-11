@@ -153,21 +153,18 @@ class NaHeaderView : public QAbstractItemView
 
 		int cSectionViewportPosition( int visual ) const;
 
-		int columnsCount() const;
-
 		bool groupped() const;
 
-		//const Section & section( int visual ) const;
 		const Sections & columns() const;
 
 		const Sections & groups() const;
 
 		QVector< int > groupsLogicals() const;
 
+		void setOffset( int new_offset );
+
 	public Q_SLOTS:
 		void headerDataChanged( Qt::Orientation, int logicalFirst, int logicalLast );
-
-		//QColor colorGroup( int visual ) const;
 
 	Q_SIGNALS:
 		void groupsChanged( int old_count, int new_count );

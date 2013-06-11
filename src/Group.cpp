@@ -38,74 +38,45 @@ uint qHash( const QVariant & var )
 */
 
 Group::Group()
-	: m_parent( 0 )
+	: Groups(),
+	  height_cached( -1 )
 {
 }
 
-Group::Group( int row, Group * parent )
-	: m_parent( parent )
+Group &
+Group::operator<<( int row_logical )
 {
-	m_rows << row;
-}
+	m_rows << row_logical;
 
-void
-Group::operator<<( int i )
-{
-	m_rows << i;
-}
-
-void
-Group::buildGroupsForColumns( QVector< int > logicals, const QAbstractItemModel * model )
-{
-
-	for ( register int r = 0; r < model->rowCount(); ++r ) {
-
-		//gTGroups * gT
-
-		for ( register int l = 0; l < logicals.size(); ++l ) {
-
-		}
-	}
-
-	/*
-	QVector< int > inners = logicals.mid( 1 );
-
-	for ( register int r = 0; r < model->rowCount(); ++r ) {
-		const GroupKey key = model->index( r, logicals.first() ).data( Qt::DisplayRole );
-
-		if ( contains( key ) ) {
-			( *this )[ key ] << r;
-		} else {
-			Group group( r, this );
-
-			if ( ! inners.isEmpty() )
-				group.buildGroupsForColumns( inners, model );
-
-			insert( key, group );
-		}
-	}
-	*/
+	return *this;
 }
 
 int
 Group::height( int heightGroup, int heightRow ) const
 {
+	if ( height_cached != -1 )
+		return height_cached;
+
 	if ( isEmpty() ) {
-		return heightRow * m_rows.count() + heightGroup;
+		return height_cached = heightRow * m_rows.count() + heightGroup;
+		//return heightRow * m_rows.count() + heightGroup;
 
 	} else {
-		int h = 0;
+		//int h = 0;
+		height_cached = 0;
 
 		Groups::const_iterator i = constBegin();
 
 		while ( i != constEnd() ) {
 
-			h += i.value().height( heightGroup, heightRow );
+			height_cached += i.value().height( heightGroup, heightRow );
+			//h += i.value().height( heightGroup, heightRow );
 
 			++i;
 		}
 
-		return h + heightGroup;
+		return height_cached += heightGroup;
+		//return h + heightGroup;
 	}
 }
 
@@ -114,6 +85,7 @@ Group::clear()
 {
 	Groups::clear();
 	m_rows.clear();
+	height_cached = -1;
 }
 
 void
@@ -176,27 +148,22 @@ Group::groupPosition( int heightGroup, int heightRow, const GroupPointer & gPtr 
 	return 0;
 }
 
-QVariant
+GroupKey
 Group::lastGroupKey() const
 {
-	QVariant iter;
+	if ( isEmpty() )
+		return GroupKey();
 
-	Groups::const_iterator i = constBegin();
-
-	while ( i != constEnd() ) {
-
-		iter = i.key();
-
-		++i;
+	else {
+		Groups::const_iterator i = constEnd();
+		return (--i).key();
 	}
-
-	return iter;
 }
 
 void
-Group::addRowLogical( int row_logical )
+Group::addRow( int row_logical )
 {
-	m_rows.append( row_logical );
+	m_rows << row_logical;
 }
 
 const Group *

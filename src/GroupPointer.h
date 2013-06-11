@@ -17,6 +17,16 @@ class GroupPointer : public QVector< GroupKey >
 		bool isSingle() const;
 
 		const GroupKey & head() const;
+
+		/*! \fn void append( const GroupKey & key )
+		 *
+		 * \brief Append a \key
+		 *
+		 * Unlike from QVector::append appends only valid value.
+		 */
+		void append( const GroupKey & key );
+
+		GroupPointer & operator<<( const GroupKey & key );
 };
 
 #endif

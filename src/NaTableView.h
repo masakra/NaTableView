@@ -63,6 +63,8 @@ class NaTableView : public QAbstractItemView
 
 		mutable int height_group_row_cached;
 
+		void setOffset( int new_offset );
+
 		int m_offset;
 
 		int rowViewportPosition( int visual ) const;
@@ -75,6 +77,13 @@ class NaTableView : public QAbstractItemView
 
 		void drawGroup( QPainter & painter, const GroupPointer & gPtr, int pos,
 				int firstVisualColumn, int lastVisualColumn );
+
+		int vertical_length() const;
+
+		mutable int vertical_length_cached;
+
+		void setupScrollBars();
+
 
 	private Q_SLOTS:
 		void groupsChanged( int old_count, int new_count );
@@ -104,6 +113,9 @@ class NaTableView : public QAbstractItemView
 
 		// ------------------------------
 		virtual void updateGeometries();
+		// ------------------------------
+		virtual void scrollContentsBy( int dx, int dy );
+		//virtual void horizontalScrollbarAction( int action );
 
 	public:
 		NaTableView( QWidget * parent = 0 );

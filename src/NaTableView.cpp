@@ -35,9 +35,12 @@ NaTableView::NaTableView( QWidget * parent )
 	: QAbstractItemView( parent ),
 	  height_row_cached( -1 ),
 	  height_group_row_cached( -1 ),
-	  m_offset( 0 )
+	  m_offset( 0 ),
+	  vertical_length_cached( -1 )
 {
 	createHeader();
+
+	verticalScrollBar()->setSingleStep( heightRow() );
 }
 
 QRect
@@ -121,11 +124,63 @@ NaTableView::updateGeometries()
 	const QRect vg = viewport()->geometry();
 
 	header->setGeometry( vg.left(), vg.top() - top, vg.width(), top );
+
+	setupScrollBars();
 }
+
+void
+NaTableView::setupScrollBars()
+{
+	vertical_length_cached = -1;
+
+	// horizontal scroll bar
+
+	const int h_length = header->columns().length(),
+		      v_length = vertical_length();
+
+	horizontalScrollBar()->setPageStep( viewport()->width() );
+	horizontalScrollBar()->setRange( 0, h_length - viewport()->width() );
+
+	// vertical scroll bar
+
+	verticalScrollBar()->setPageStep( viewport()->height() );
+	verticalScrollBar()->setRange( 0, v_length - viewport()->height() );
+	verticalScrollBar()->setSingleStep( heightRow() );
+	//verticalScrollBar()->setSingleStep( qMax( vsize.height() / ( rowsInViewport + 1 ), 2 ) );
+}
+
+void
+NaTableView::scrollContentsBy( int dx, int dy )
+{
+	//qDebug() << "scrollContentsBy" << dx << dy;
+
+	if ( dx ) {
+
+		header->setOffset( horizontalScrollBar()->value() );
+	}
+
+	if ( dy ) {
+
+		setOffset( verticalScrollBar()->value() );
+	}
+
+	scrollDirtyRegion( dx, dy );
+	viewport()->scroll( dx, dy );
+}
+
+/*
+void
+NaTableView::horizontalScrollbarAction( int action )
+{
+	QAbstractItemView::horizontalScrollbarAction( action );
+}
+*/
 
 void
 NaTableView::groupsChanged( int old_count, int new_count )	// slot
 {
+	m_offset = 0;
+
 	if ( ! old_count || ! new_count )
 		updateGeometries();
 
@@ -134,7 +189,7 @@ NaTableView::groupsChanged( int old_count, int new_count )	// slot
 	else
 		rootGroup.clear();
 
-	viewport()->update();
+	setupScrollBars();
 }
 
 void
@@ -157,7 +212,8 @@ NaTableView::buildRootGroup()
 			group = & ( *group )[ key ];
 		}
 
-		group->addRowLogical( r );
+		group->addRow( r );
+		//( *group ) << r;					as a variant
 	}
 }
 
@@ -166,7 +222,6 @@ NaTableView::paintEvent( QPaintEvent * e )
 {
 	QPainter painter( viewport() );
 
-
 	int firstVisualColumn = header->cVisualIndexAt( e->rect().left() ),
 	    lastVisualColumn = header->cVisualIndexAt( e->rect().right() );
 
@@ -174,7 +229,7 @@ NaTableView::paintEvent( QPaintEvent * e )
 		firstVisualColumn = 0;
 
 	if ( lastVisualColumn == -1 )
-		lastVisualColumn = header->columnsCount() - 1;
+		lastVisualColumn = header->columns().count() - 1;
 
 
 	if ( rootGroup.isEmpty() ) {
@@ -195,10 +250,10 @@ NaTableView::paintEvent( QPaintEvent * e )
 
 		for ( int r = firstVisualRow; r <= lastVisualRow; ++r ) {
 			for ( int c = firstVisualColumn; c <= lastVisualColumn; ++c ) {
-				colw = header->columns()[ c ].size;
+				colw = header->columns().at( c ).size;
 				cell.setWidth( colw );
 
-				drawCell( painter, cell, model()->index( r, header->columns()[ c ].logical ) );
+				drawCell( painter, cell, model()->index( r, header->columns().at( c ).logical ) );
 
 				cell.setX( cell.x() + colw );
 			}
@@ -215,26 +270,28 @@ NaTableView::paintEvent( QPaintEvent * e )
 
 		if ( lastVisualGroup.isEmpty() )
 			lastVisualGroup << rootGroup.lastGroupKey();
+			//lastVisualGroup << rootGroup.last().key();
 
 		//qDebug() << firstVisualGroup[ 0 ] << lastVisualGroup[ 0 ];
 
-		int hoff = rootGroup.groupPosition( heightRow(), heightGroupRow(), firstVisualGroup );
+		int voff = rootGroup.groupPosition( heightRow(), heightGroupRow(), firstVisualGroup ) -
+			m_offset;
 
-		drawGroup( painter, firstVisualGroup, hoff, firstVisualColumn, lastVisualColumn );
+		drawGroup( painter, firstVisualGroup, voff, firstVisualColumn, lastVisualColumn );
 
 		// нарисовать остальные корневые группы до lastVisualGroup
 
 		Groups::const_iterator i = rootGroup.find( firstVisualGroup.at( 0 ) ),
 							   bl = ++( rootGroup.find( lastVisualGroup.at( 0 ) ) );
 
-		hoff += i->height( heightGroupRow(), heightRow() );
+		voff += i->height( heightGroupRow(), heightRow() );
 		++i;
 
 		while ( i != bl && i != rootGroup.constEnd() ) {
 
-			drawGroup( painter, GroupPointer() << i.key(), hoff, firstVisualColumn, lastVisualColumn );
+			drawGroup( painter, GroupPointer() << i.key(), voff, firstVisualColumn, lastVisualColumn );
 
-			hoff += i->height( heightGroupRow(), heightRow() );
+			voff += i->height( heightGroupRow(), heightRow() );
 
 			++i;
 		}
@@ -408,8 +465,35 @@ NaTableView::groupAt( int pos ) const
 {
 	GroupPointer gPtr;
 
-	rootGroup.groupAt( pos, heightGroupRow(), heightRow(), gPtr );
+	rootGroup.groupAt( pos + m_offset, heightGroupRow(), heightRow(), gPtr );
 
 	return gPtr;
+}
+
+int
+NaTableView::vertical_length() const
+{
+	if ( vertical_length_cached != -1 )
+		return vertical_length_cached;
+
+	if ( rootGroup.isEmpty() )
+		vertical_length_cached = model()->rowCount() * heightRow();
+	else
+		vertical_length_cached = rootGroup.height( heightGroupRow(), heightRow() );
+
+	return vertical_length_cached;
+}
+
+void
+NaTableView::setOffset( int new_offset )
+{
+	if ( m_offset == new_offset )
+		return;
+
+	const int d = m_offset - new_offset;
+
+	m_offset = new_offset;
+
+	viewport()->scroll( 0, d );
 }
 

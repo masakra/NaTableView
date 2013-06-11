@@ -37,7 +37,6 @@
 
 class Sections : public QVector< Section >
 {
-
 	public:
 		Sections();
 
@@ -46,6 +45,15 @@ class Sections : public QVector< Section >
 		int visualIndex( int logical ) const;
 
 		QVector< int > logicals() const;
+
+		/*! \fn int length() const
+		 *
+		 * \brief Общая длина, сумма длин всех секций
+		 *
+		 * Возможно добавить кэширование, здесь или в NaHeaderView.
+		 * Учесть возможность скрытия некоторых секций
+		 */
+		int length() const;
 };
 
 #endif

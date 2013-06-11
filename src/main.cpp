@@ -11,11 +11,11 @@ main( int argc, char ** argv )
 {
 	QApplication app( argc, argv );
 
-	QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
-	db.setDatabaseName( "test.db" );
-	//QSqlDatabase db = QSqlDatabase::addDatabase( "QPSQL" );
-	//db.setHostName("localhost");
-	//db.setDatabaseName("nordavia");
+	//QSqlDatabase db = QSqlDatabase::addDatabase( "QSQLITE" );
+	//db.setDatabaseName( "test.db" );
+	QSqlDatabase db = QSqlDatabase::addDatabase( "QPSQL" );
+	db.setHostName("localhost");
+	db.setDatabaseName("nordavia");
 
 	db.open();
 
@@ -28,8 +28,8 @@ main( int argc, char ** argv )
 	proxy.sort( 0 );
 	proxy.setDynamicSortFilter( true );
 
-	model.setQuery( "SELECT * FROM test" );
-	//model.setQuery( "SELECT * FROM arinc.pa" );
+	//model.setQuery( "SELECT * FROM test" );
+	model.setQuery( "SELECT * FROM arinc.pa" );
 
 	ntv.setModel( &proxy );
 	ntv.show();
