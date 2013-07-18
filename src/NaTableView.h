@@ -83,10 +83,13 @@ class NaTableView : public QAbstractItemView
 		mutable int vertical_length_cached;
 
 		void setupScrollBars();
+		void setupHorizontalScrollBar();
 
 
 	private Q_SLOTS:
 		void groupsChanged( int old_count, int new_count );
+		void sectionResized( const QRect & rect );
+		void sectionMoved( const QRect & rect );
 
 	protected:
 		// ниже, 9 обязательных функции требующих реализации

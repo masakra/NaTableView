@@ -85,7 +85,7 @@ class NaHeaderView : public QAbstractItemView
 		int gSectionViewportPosition( int visual ) const;
 		//int cSectionViewportPosition( int visual ) const;	 moved to public:
 
-		int sectionHandleAt( int pos ) const;
+		int sectionHandleAt( const QPoint & pos ) const;
 
 		int logicalIndexAt( const QPoint & pos ) const;
 
@@ -168,6 +168,8 @@ class NaHeaderView : public QAbstractItemView
 
 	Q_SIGNALS:
 		void groupsChanged( int old_count, int new_count );
+		void sectionResized( const QRect & rect );
+		void sectionMoved( const QRect & rect );	// в области столбцов
 };
 
 #endif

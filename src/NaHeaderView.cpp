@@ -341,17 +341,10 @@ NaHeaderView::mouseMoveEvent( QMouseEvent * e )
 
 			const bool hasCursor = testAttribute( Qt::WA_SetCursor );
 
-			// at group area
-			if ( y <= heightGroups() ) {
-				if ( hasCursor )
-					unsetCursor();
-				break;
-			}
-
-			// otherwise at columns area
-			const int handle = sectionHandleAt( x );
+			const int handle = sectionHandleAt( e->pos() );
 
 			if ( handle != -1 ) {
+
 				if ( ! hasCursor )
 					setCursor( Qt::SplitHCursor );
 
@@ -367,9 +360,13 @@ NaHeaderView::mouseMoveEvent( QMouseEvent * e )
 }
 
 int
-NaHeaderView::sectionHandleAt( int pos ) const
+NaHeaderView::sectionHandleAt( const QPoint & pos ) const
 {
-	const int visual = cVisualIndexAt( pos );
+	if ( pos.y() < heightGroups() )
+		return -1;
+
+	const int x = pos.x(),
+			  visual = cVisualIndexAt( x );
 
 	if ( visual == -1 )
 		return -1;
@@ -377,7 +374,7 @@ NaHeaderView::sectionHandleAt( int pos ) const
 	const int sectionWidth = s_columns[ visual ].size,
 			  sectionPos = cSectionViewportPosition( visual );
 
-	if ( pos >= ( sectionWidth + sectionPos - HANDLE_WIDTH ) )
+	if ( x >= ( sectionWidth + sectionPos - HANDLE_WIDTH ) )
 		return visual;
 
 	return -1;
@@ -404,7 +401,7 @@ NaHeaderView::mousePressEvent( QMouseEvent * e )
 	if ( e->button() != Qt::LeftButton )
 		return;
 
-	const int handle = sectionHandleAt( e->pos().x() );
+	const int handle = sectionHandleAt( e->pos() );
 
 	if ( handle == -1 ) {	// секция перемещается
 
@@ -643,7 +640,7 @@ NaHeaderView::resizeSection( int visual, int size )
 
 	viewport()->update( rect );
 
-	// TODO emit signal sectionResized( rect );
+	emit sectionResized( rect );
 }
 
 void
@@ -725,13 +722,18 @@ NaHeaderView::moveSection()
 	else
 		s_columns.remove( visual_from );
 
-	if ( from_groups || targetIsGroupArea ) {
+	if ( from_groups || targetIsGroupArea ) {	// перемещение в/из области группировки
 		heightGroups_cached = -1;
-
+		viewport()->update();
 		emit groupsChanged( oldGroupsCount, s_groups.count() );
+
+	} else {									// перемещение в области столбцов
+		const int x = cSectionViewportPosition( qMin( visual_from, m_target ) );
+		const QRect rect( x, heightGroups(), viewport()->width() - x, heightColumns() );
+		viewport()->update( rect );
+		emit sectionMoved( rect );
 	}
 
-	viewport()->update();
 }
 
 bool
@@ -786,10 +788,10 @@ NaHeaderView::setOffset( int new_offset )
 
 	m_offset = new_offset;
 
-	// viewport()->scroll( d, 0 );
-	//
-	// работает некорректно в некоторых WM. На винде предположительно тоже.
-	// переделано с использованием viewport()->update()
+	// отскроллить только область столбцов, не трогая область группировки
+	// viewport()->scroll( d, 0, QRect );
+
+	viewport()->scroll( d, 0, QRect( 0, heightGroups(), viewport()->width(), heightColumns() ) );
 
 	if ( state == ResizeSection ) {
 		QPoint curPos = QCursor::pos();
@@ -797,8 +799,5 @@ NaHeaderView::setOffset( int new_offset )
 		m_firstPos.setX( m_firstPos.x() + d );
 		m_lastPos.setX( m_lastPos.x() + d );
 	}
-
-	// обновить только область столбцов
-	viewport()->update( 0, heightGroups(), viewport()->width(), heightColumns() );
 }
 

@@ -104,6 +104,10 @@ NaTableView::createHeader()
 	header = new NaHeaderView( this );
 
 	connect( header, SIGNAL( groupsChanged( int, int ) ), SLOT( groupsChanged( int, int ) ) );
+	connect( header, SIGNAL( sectionResized( const QRect & ) ),
+			SLOT( sectionResized( const QRect & ) ) );
+	connect( header, SIGNAL( sectionMoved( const QRect & ) ),
+			SLOT( sectionMoved( const QRect & ) ) );
 	// TODO добавить сигналы
 }
 
@@ -137,21 +141,24 @@ NaTableView::setupScrollBars()
 	vertical_length_cached = -1;
 
 	// horizontal scroll bar
-
-	const int h_length = header->columns().length(),
-		      v_length = vertical_length();
-
-	horizontalScrollBar()->setPageStep( viewport()->width() );
-	horizontalScrollBar()->setRange( 0, h_length - viewport()->width() );
+	setupHorizontalScrollBar();
 
 	// vertical scroll bar
-
-	verticalScrollBar()->setPageStep( viewport()->height() );
-	verticalScrollBar()->setRange( 0, v_length - viewport()->height() );
+	const int height = viewport()->height();
+	verticalScrollBar()->setPageStep( height );
+	verticalScrollBar()->setRange( 0, vertical_length() - height );
 	verticalScrollBar()->setSingleStep( heightRow() );
 	//verticalScrollBar()->setSingleStep( qMax( vsize.height() / ( rowsInViewport + 1 ), 2 ) );
 
 	viewport()->update();
+}
+
+void
+NaTableView::setupHorizontalScrollBar()
+{
+	horizontalScrollBar()->setPageStep( viewport()->width() );
+	horizontalScrollBar()->setRange( 0,
+			header->columns().length() - viewport()->width() );
 }
 
 void
@@ -239,7 +246,7 @@ NaTableView::paintEvent( QPaintEvent * e )
 		lastVisualColumn = header->columns().count() - 1;
 
 
-	if ( rootGroup.isEmpty() ) {
+	if ( rootGroup.isEmpty() ) {		// draw without groups
 		int firstVisualRow = visualRowIndexAt( 0 ),
 			lastVisualRow = visualRowIndexAt( viewport()->height() );
 
@@ -331,7 +338,7 @@ NaTableView::drawGroup( QPainter & painter, const GroupPointer & gPtr, int pos,
 	painter.drawRect( rect );
 
 	/*
-	\\ текст
+	\\ текст строки заголовка группы
 	*/
 	QRect rectText( rect );
 	rectText.setLeft( rectText.left() + 3 );
@@ -379,7 +386,14 @@ NaTableView::drawGroup( QPainter & painter, const GroupPointer & gPtr, int pos,
 
 		pos += group->rows().size() * heightRow();
 
-		for ( int r = 0; r < group->rows().size(); ++r ) {
+		int startRow = 0;
+
+		if ( cell.y() < 0 ) {
+			startRow = cell.y() / -heightRow();
+			cell.moveTop( cell.y() + startRow * heightRow() );
+		}
+
+		for ( int r = startRow; r < group->rows().size() && cell.y() < viewport()->height(); ++r ) {
 
 			const int row_logical = group->rows().at( r );
 
@@ -502,5 +516,20 @@ NaTableView::setOffset( int new_offset )
 	m_offset = new_offset;
 
 	viewport()->scroll( 0, d );
+}
+
+void
+NaTableView::sectionResized( const QRect & rect )
+{
+	setupHorizontalScrollBar();
+
+	viewport()->update( rect.x(), 0,
+			viewport()->width() - rect.x(), viewport()->height() );
+}
+
+void
+NaTableView::sectionMoved( const QRect & rect )
+{
+	viewport()->update( QRect( rect.x(), 0, rect.width(), viewport()->height() ) );
 }
 
