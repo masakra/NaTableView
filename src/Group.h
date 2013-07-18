@@ -47,8 +47,6 @@ class Group : public Groups				// наследует вложенные груп
 
 		mutable int height_cached;
 
-		unsigned code:20;
-
 	public:
 		Group();
 
