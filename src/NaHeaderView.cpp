@@ -52,6 +52,8 @@ NaHeaderView::NaHeaderView( QWidget * parent )
 	viewport()->setMouseTracking( true );
 	viewport()->setBackgroundRole( QPalette::Button );
 
+	setAttribute( Qt::WA_OpaquePaintEvent );
+
 	delete itemDelegate();
 }
 
@@ -459,9 +461,10 @@ NaHeaderView::logicalIndexAt( const QPoint & pos ) const
 
 		return -1;
 
-	} else {
+	} else {		// область столбцов
 
-		int next_section_start = 0;		// TODO добавить offset
+		//int next_section_start = 0;		// TODO добавить offset
+		int next_section_start = -m_offset;		// TODO добавить offset
 
 		for ( int s = 0; s < s_columns.size(); ++s ) {
 			next_section_start += s_columns[ s ].size;
@@ -783,7 +786,10 @@ NaHeaderView::setOffset( int new_offset )
 
 	m_offset = new_offset;
 
-	viewport()->scroll( d, 0 );
+	// viewport()->scroll( d, 0 );
+	//
+	// работает некорректно в некоторых WM. На винде предположительно тоже.
+	// переделано с использованием viewport()->update()
 
 	if ( state == ResizeSection ) {
 		QPoint curPos = QCursor::pos();
@@ -791,5 +797,8 @@ NaHeaderView::setOffset( int new_offset )
 		m_firstPos.setX( m_firstPos.x() + d );
 		m_lastPos.setX( m_lastPos.x() + d );
 	}
+
+	// обновить только область столбцов
+	viewport()->update( 0, heightGroups(), viewport()->width(), heightColumns() );
 }
 

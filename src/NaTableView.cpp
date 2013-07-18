@@ -38,7 +38,10 @@ NaTableView::NaTableView( QWidget * parent )
 	  m_offset( 0 ),
 	  vertical_length_cached( -1 )
 {
+	setAttribute( Qt::WA_OpaquePaintEvent );
+
 	createHeader();
+
 
 	verticalScrollBar()->setSingleStep( heightRow() );
 }
@@ -147,6 +150,8 @@ NaTableView::setupScrollBars()
 	verticalScrollBar()->setRange( 0, v_length - viewport()->height() );
 	verticalScrollBar()->setSingleStep( heightRow() );
 	//verticalScrollBar()->setSingleStep( qMax( vsize.height() / ( rowsInViewport + 1 ), 2 ) );
+
+	viewport()->update();
 }
 
 void
@@ -164,8 +169,10 @@ NaTableView::scrollContentsBy( int dx, int dy )
 		setOffset( verticalScrollBar()->value() );
 	}
 
-	scrollDirtyRegion( dx, dy );
-	viewport()->scroll( dx, dy );
+	//scrollDirtyRegion( dx, dy );
+	//viewport()->scroll( dx, dy );
+
+	viewport()->update();
 }
 
 /*
